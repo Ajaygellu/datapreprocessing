@@ -1,0 +1,83 @@
+import PyPDF2
+import os
+import aspose.words as aw
+import pandas as pd
+import openpyxl
+
+def pdf_split(input_file,split_size=3):
+    #opening the pdf file
+    with open(input_file,'rb') as file:
+        #reading the file
+        pdf_reader=PyPDF2.PdfReader(file)
+        #len of pdf
+        pdf_pages=len(pdf_reader.pages)
+
+         # Create a folder if it doesn't exist
+        save_folder = "split_files"
+        os.makedirs(save_folder, exist_ok=True)
+        
+        #splitting pdf
+        for i in range(0,pdf_pages,split_size):
+            pdf_writer=PyPDF2.PdfWriter()
+            end=min(i+split_size,pdf_pages)
+
+            for j in range(i,end):
+                pdf_writer.add_page(pdf_reader.pages[j])
+
+            output_filename = f"{save_folder}/split_part_{i+1}to{i+split_size}.pdf"
+
+            with open(output_filename,'wb') as output_pdf:
+                pdf_writer.write(output_pdf)
+
+            print(f"output file created and saved as {output_filename}")
+
+def word_to_pdf(input_file):
+    data=aw.Document(input_file)
+    os.makedirs("wordtopdffiles",exist_ok=True)
+    output_file="wordtopdffiles\\wordpdf.pdf"
+    data.save(output_file)
+    print("word document converted and saved")
+
+    pdf_split(output_file)
+
+
+def excel_split(input_file,split_size=30):
+    df=pd.read_excel(input_file,engine='openpyxl')
+    no_rows=len(df)
+
+    for i in range(0,no_rows,split_size):
+        split=df.iloc[i:i+split_size]
+        #save the split
+
+        os.makedirs("excelchunkfiles",exist_ok=True)
+        split.to_excel(f"excelchunkfiles\\excelchunkfrom{i}to{i+split_size}row.xlsx",index=False)
+
+    print("excel chunks saved")
+
+def main(input_file):
+    try:
+        if input_file.endswith(".pdf"):
+            print("Your PDF file is splitting in to chunks")
+            pdf_split(input_file)
+
+        elif input_file.endswith(".docx"):
+            print("Your Word Document is splitting in to chunk PDFs")
+            word_to_pdf(input_file)
+
+        elif input_file.endswith(".xlsx"):
+            print("Your excel file is splitting in to chunks")
+            excel_split(input_file)
+
+        else:
+            print("Error: Unsupported file format.")
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+
+input_file="C:\\Users\\ajayg\\Downloads\\randomwordtext.docx"
+
+main(input_file)
+
+        
+
